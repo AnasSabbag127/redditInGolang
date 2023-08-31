@@ -2,6 +2,7 @@ package main
 
 import (
 	"awesomeProject/api"
+	"awesomeProject/basicAuth"
 	"awesomeProject/database"
 	"fmt"
 	_ "github.com/lib/pq"
@@ -10,7 +11,7 @@ import (
 )
 
 func handler(_ http.ResponseWriter, r *http.Request) {
-	log.Println("URL Path=%q ", r.URL.Path)
+	log.Println("URL Path = %q ", r.URL.Path)
 }
 func main() {
 
@@ -21,6 +22,8 @@ func main() {
 		return
 	}
 	http.HandleFunc("/", handler)
+	http.HandleFunc("/login", basicAuth.Login)
+	http.HandleFunc("/home", basicAuth.Home)
 	http.HandleFunc("/api/create_users", api.CreateUserHandler)
 	http.HandleFunc("/api/get_users", api.GetUserHandler)
 	http.HandleFunc("/api/update_user", api.UpdateUserHandler)
