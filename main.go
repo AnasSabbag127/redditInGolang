@@ -2,7 +2,7 @@ package main
 
 import (
 	"awesomeProject/api"
-	"awesomeProject/basicAuth"
+	"awesomeProject/authUser"
 	"awesomeProject/database"
 	"fmt"
 	_ "github.com/lib/pq"
@@ -22,8 +22,8 @@ func main() {
 		return
 	}
 	http.HandleFunc("/", handler)
-	http.HandleFunc("/login", basicAuth.Login)
-	http.HandleFunc("/home", basicAuth.Home)
+	http.HandleFunc("/login", authUser.Login)
+	http.HandleFunc("/home", authUser.Home)
 	http.HandleFunc("/api/create_users", api.CreateUserHandler)
 	http.HandleFunc("/api/get_users", api.GetUserHandler)
 	http.HandleFunc("/api/update_user", api.UpdateUserHandler)

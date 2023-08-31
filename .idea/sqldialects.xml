@@ -4,5 +4,6 @@
     <file url="file://$PROJECT_DIR$/api/comments.go" dialect="GenericSQL" />
     <file url="file://$PROJECT_DIR$/api/posts.go" dialect="GenericSQL" />
     <file url="file://$PROJECT_DIR$/api/users.go" dialect="GenericSQL" />
+    <file url="file://$PROJECT_DIR$/authUser/login.go" dialect="GenericSQL" />
   </component>
 </project>

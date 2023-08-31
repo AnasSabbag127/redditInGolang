@@ -1,11 +1,13 @@
 package api
 
 import (
+	"awesomeProject/authUser"
 	"awesomeProject/database"
 	"awesomeProject/models"
 	"database/sql"
 	"encoding/json"
 	"github.com/google/uuid"
+	"golang.org/x/crypto/bcrypt"
 	"log"
 	"net/http"
 )
@@ -20,6 +22,15 @@ func CreateUserHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Invalid Request Body", http.StatusBadRequest)
 		return
 	}
+	// convert the simple password into hash format
+	hashPsw, err := bcrypt.GenerateFromPassword([]byte(newUser.Password), bcrypt.DefaultCost)
+
+	if err != nil {
+		log.Println("password hashing error ", err)
+		http.Error(w, "password hashing error ", http.StatusInternalServerError)
+		return
+	}
+	hashPswString := string(hashPsw)
 
 	db, err := database.ConnectToDb()
 
@@ -30,7 +41,7 @@ func CreateUserHandler(w http.ResponseWriter, r *http.Request) {
 	defer db.Close()
 
 	// insert new user
-	_, err = db.Exec("INSERT INTO users(name,password) VALUES($1,$2)", newUser.Name, newUser.Password)
+	_, err = db.Exec("INSERT INTO users(name,password) VALUES($1,$2)", newUser.Name, hashPswString)
 
 	if err != nil {
 		http.Error(w, "Database Error ", http.StatusInternalServerError)
@@ -40,7 +51,8 @@ func CreateUserHandler(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusCreated)
 
 	response := map[string]interface{}{"message": "User created successfully",
-		"user": newUser,
+		"user":     newUser,
+		"password": newUser.Password,
 	}
 	jsonResponse, err := json.Marshal(response)
 	if err != nil {
@@ -96,6 +108,11 @@ func GetUserHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func DeleteUserHandler(w http.ResponseWriter, r *http.Request) {
+
+	if authUser.CheckForTokenValidation(w, r) == false {
+		return
+	}
+
 	IdParam := r.URL.Query().Get("id")
 	userId, err := uuid.Parse(IdParam)
 	if err != nil {
@@ -131,6 +148,9 @@ func DeleteUserHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func UpdateUserHandler(w http.ResponseWriter, r *http.Request) {
+	if authUser.CheckForTokenValidation(w, r) == false {
+		return
+	}
 	idParam := r.URL.Query().Get("id")
 	userId, err := uuid.Parse(idParam)
 	if err != nil {
@@ -165,9 +185,17 @@ func UpdateUserHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Invalid Request Body", http.StatusBadRequest)
 		return
 	}
+	hashPswd, err := bcrypt.GenerateFromPassword([]byte(updateUser.Password), bcrypt.DefaultCost)
+
+	if err != nil {
+		log.Println("Error : ", err)
+		http.Error(w, "error during hashing ", http.StatusInternalServerError)
+		return
+	}
+	hashPswdString := string(hashPswd)
 
 	//now update the user query
-	_, err = db.Exec("UPDATE users SET name=$1,password=$2 WHERE id = $3", updateUser.Name, updateUser.Password, userId)
+	_, err = db.Exec("UPDATE users SET name=$1,password=$2 WHERE id = $3", updateUser.Name, hashPswdString, userId)
 	if err != nil {
 		log.Println("ERROR is : ", err)
 		http.Error(w, "DATABASE ERROR", http.StatusInternalServerError)
